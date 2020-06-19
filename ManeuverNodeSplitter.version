@@ -1,16 +1,16 @@
 {
-  "NAME":"ManeuverNodeSplitter",
-  "URL":"https://github.com/linuxgurugamer/ManeuverNodeSplitter/raw/master/ManeuverNodeSplitter.version",
-  "DOWNLOAD":"https://github.com/linuxgurugamer/ManeuverNodeSplitter/releases",
-  "VERSION":{
-    "MAJOR":1,
-    "MINOR":8,
-    "PATCH":0,
-    "BUILD":0
+  "NAME": "ManeuverNodeSplitter",
+  "URL": "http://ksp.spacetux.net/avc/ManeuverNodeSplitter",
+  "DOWNLOAD": "https://github.com/linuxgurugamer/ManeuverNodeSplitter/releases",
+  "VERSION": {
+    "MAJOR": 1,
+    "MINOR": 8,
+    "PATCH": 0,
+    "BUILD": 1
   },
-  "KSP_VERSION":{
-    "MAJOR":1,
-    "MINOR":8,
-    "PATCH":0
+  "KSP_VERSION": {
+    "MAJOR": 1,
+    "MINOR": 8,
+    "PATCH": 0
   }
 }
