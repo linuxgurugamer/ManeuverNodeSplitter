@@ -53,7 +53,7 @@ namespace ManeuverNodeSplitter
 
             double targetPeriod = value * 60;
 
-            for(int iteration = 0; iteration < MNSSettings.Instance.splitByPeriodIterations; iteration += 1)
+            for(int iteration = 0; iteration < HighLogic.CurrentGame.Parameters.CustomParams<MNS>().splitByPeriodIterations; iteration += 1)
             {
                 fraction = (minFraction + maxFraction) / 2;
                 Vector3d dv = original.DeltaV * fraction;

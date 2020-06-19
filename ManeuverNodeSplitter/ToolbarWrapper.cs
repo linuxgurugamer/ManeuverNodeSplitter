@@ -34,6 +34,7 @@ using UnityEngine;
 namespace ManeuverNodeSplitter
 {
 
+#if false
 
 
     /**********************************************************\
@@ -804,6 +805,8 @@ namespace ManeuverNodeSplitter
         {
         }
     }
+    #endregion
+#endif
 
     internal class ToolbarTypes
     {
@@ -894,5 +897,5 @@ namespace ManeuverNodeSplitter
         }
     }
 
-    #endregion
+//#endregion
 }

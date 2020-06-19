@@ -3,6 +3,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+using ToolbarControl_NS;
+using ClickThroughFix;
+using SpaceTuxUtility;
+
 namespace ManeuverNodeSplitter
 {
     [KSPAddon(KSPAddon.Startup.Flight, false)]
@@ -10,21 +15,24 @@ namespace ManeuverNodeSplitter
     {
         protected PatchedConicSolver Solver { get { return FlightGlobals.ActiveVessel == null ? null : FlightGlobals.ActiveVessel.patchedConicSolver; } }
 
-        private ApplicationLauncherButton launcherButton;
-        private IButton button;
+        ToolbarControl toolbarControl;
+
         private bool visible;
-        private int windowId = 9651;
+        private int windowId;
         private Rect position = new Rect(100, 300, 200, 100);
 
         private List<INodeSplitter> splitters = new List<INodeSplitter>();
         private INodeSplitter currentSplitter;
 
         protected List<Maneuver> oldManeuvers = new List<Maneuver>();
-
+        WindowHelper windowHelper;
         public void Awake()
         {
+            windowHelper = new WindowHelper();
+            windowId = WindowHelper.NextWindowId("NodeSplitter");
+
             splitters.Add(new NodeSplitterByApoapsis(this));
-            if(NodeSplitterByBurnTime.Available)
+            if (NodeSplitterByBurnTime.Available)
             {
                 splitters.Add(new NodeSplitterByBurnTime(this));
             }
@@ -33,40 +41,39 @@ namespace ManeuverNodeSplitter
             splitters.Sort((l, r) => { return string.Compare(l.GetName(), r.GetName(), true); });
             currentSplitter = splitters[0];
         }
+        internal const string MODID = "ManeuverNodeSplitter_NS";
+        internal const string MODNAME = "Maneuver Node Splitter";
+
+        bool hideUI;
 
         public void Start()
         {
-            if(ToolbarManager.ToolbarAvailable)
+            GameEvents.onShowUI.Add(ShowUI);
+            GameEvents.onHideUI.Add(HideUI);
+
+            //if (toolbarControl == null)
             {
-                button = ToolbarManager.Instance.add("ManeuverNodeSplitter", "GUI");
-                button.TexturePath = "NodeSplitter/ejection24";
-                button.ToolTip = "Maneuver Node Splitter";
-                button.Enabled = true;
-                button.OnClick += (e) => { ToggleVisibility(); };
+                toolbarControl = gameObject.AddComponent<ToolbarControl>();
+                toolbarControl.AddToAllToolbars(ToggleVisibility, ToggleVisibility,
+                    ApplicationLauncher.AppScenes.MAPVIEW | ApplicationLauncher.AppScenes.FLIGHT,
+                    MODID,
+                    "nodeSplitterButton",
+                    "NodeSplitter/PluginData/ejection38",
+                    "NodeSplitter/PluginData/ejection24",
+                    MODNAME
+                );
             }
-            else
-            {
-                Texture2D texture = GameDatabase.Instance.GetTexture("NodeSplitter/ejection38", false);
-                if(texture != null)
-                {
-                    launcherButton = ApplicationLauncher.Instance.AddModApplication(
-                        ToggleVisibility, ToggleVisibility, null, null, null, null, ApplicationLauncher.AppScenes.MAPVIEW, texture);
-                }
-            }
+
         }
 
         public void OnDestroy()
         {
-            if(button != null)
-            {
-                button.Destroy();
-                button = null;
-            }
-            if(launcherButton != null)
-            {
-                ApplicationLauncher.Instance.RemoveModApplication(launcherButton);
-                launcherButton = null;
-            }
+            toolbarControl.OnDestroy();
+            Destroy(toolbarControl);
+
+            GameEvents.onShowUI.Remove(ShowUI);
+            GameEvents.onHideUI.Remove(HideUI);
+
         }
 
         public void ResetWindow()
@@ -82,25 +89,46 @@ namespace ManeuverNodeSplitter
         private bool initialized = false;
         private void OnFirstGUI()
         {
-            int index = splitters.FindIndex((s) => { return string.Compare(s.GetName(), MNSSettings.Instance.defaultMode, true) == 0; });
-            if(index >= 0)
+            string defaultMode = "";
+            if (HighLogic.CurrentGame.Parameters.CustomParams<MNS>().byDv)
+                defaultMode = "by dV";
+            if (HighLogic.CurrentGame.Parameters.CustomParams<MNS>().byAp)
+                defaultMode = "by Apoapsis";
+            if (HighLogic.CurrentGame.Parameters.CustomParams<MNS>().byBurnTime)
+                defaultMode = "by Burn Time";
+            if (HighLogic.CurrentGame.Parameters.CustomParams<MNS>().byPeriod)
+                defaultMode = "by Period";
+
+            int index = splitters.FindIndex((s) => { return string.Compare(s.GetName(), defaultMode, true) == 0; });
+            if (index >= 0)
             {
                 currentSplitter = splitters[index];
             }
             initialized = true;
         }
+        private void ShowUI()
+        {
+            hideUI = false;
+        }
+        void HideUI()
+        {
+            hideUI = true;
+        }
+
+
 
         internal void OnGUI()
         {
-            if(!initialized)
+            if (!initialized)
             {
                 OnFirstGUI();
             }
-            if(visible && currentSplitter != null)
+            if (!hideUI && visible && currentSplitter != null)
             {
-                GUI.skin = MNSSettings.Instance.Skin;
+                if (!HighLogic.CurrentGame.Parameters.CustomParams<MNS>().altSkin)
+                    GUI.skin = HighLogic.Skin;
 
-                position = GUILayout.Window(windowId, position, currentSplitter.DrawWindow, "Node Splitter", GUILayout.ExpandHeight(true));
+                position = ClickThruBlocker.GUILayoutWindow(windowId, position, currentSplitter.DrawWindow, "Node Splitter", GUILayout.ExpandHeight(true));
             }
         }
 
@@ -108,13 +136,13 @@ namespace ManeuverNodeSplitter
         {
             GUILayout.BeginHorizontal();
 
-            GUIStyle alignCenter = new GUIStyle(MNSSettings.Instance.Skin.label);
+            GUIStyle alignCenter = new GUIStyle(GUI.skin.label);
             alignCenter.alignment = TextAnchor.MiddleCenter;
 
-            if(GUILayout.Button("<", GUILayout.Width(30)))
+            if (GUILayout.Button("<", GUILayout.Width(30)))
                 PreviousSplitter();
             GUILayout.Label(currentSplitter.GetName(), alignCenter, GUILayout.ExpandWidth(true));
-            if(GUILayout.Button(">", GUILayout.Width(30)))
+            if (GUILayout.Button(">", GUILayout.Width(30)))
                 NextSplitter();
 
             GUILayout.EndHorizontal();
@@ -124,9 +152,9 @@ namespace ManeuverNodeSplitter
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label("", GUILayout.ExpandWidth(true));
-            if(oldManeuvers.Count > 0 && oldManeuvers[0].UT > Planetarium.GetUniversalTime())
+            if (oldManeuvers.Count > 0 && oldManeuvers[0].UT > Planetarium.GetUniversalTime())
             {
-                if(GUILayout.Button("Undo", GUILayout.Width(70)))
+                if (GUILayout.Button("Undo", GUILayout.Width(70)))
                 {
                     UndoSplit();
                     ResetWindow();
@@ -136,7 +164,7 @@ namespace ManeuverNodeSplitter
             {
                 GUILayout.Label(" ", GUILayout.Width(70));
             }
-            if(GUILayout.Button("Apply", GUILayout.Width(70)))
+            if (GUILayout.Button("Apply", GUILayout.Width(70)))
             {
                 currentSplitter.SplitNode();
             }
@@ -146,7 +174,7 @@ namespace ManeuverNodeSplitter
         internal void PreviousSplitter()
         {
             int index = splitters.IndexOf(currentSplitter) - 1;
-            if(index < 0)
+            if (index < 0)
             {
                 index = splitters.Count - 1;
             }
@@ -157,7 +185,7 @@ namespace ManeuverNodeSplitter
         internal void NextSplitter()
         {
             int index = splitters.IndexOf(currentSplitter) + 1;
-            if(index >= splitters.Count)
+            if (index >= splitters.Count)
             {
                 index = 0;
             }
@@ -174,7 +202,7 @@ namespace ManeuverNodeSplitter
         {
             List<Maneuver> oldSaves = new List<Maneuver>(oldManeuvers);
             oldManeuvers.Clear();
-            foreach(ManeuverNode node in Solver.maneuverNodes)
+            foreach (ManeuverNode node in Solver.maneuverNodes)
             {
                 oldManeuvers.Add(new Maneuver(node));
             }
@@ -183,15 +211,15 @@ namespace ManeuverNodeSplitter
 
         private void UndoSplit()
         {
-            if(IsSolverAvailable() && oldManeuvers.Count > 0 && oldManeuvers[0].UT > Planetarium.GetUniversalTime())
+            if (IsSolverAvailable() && oldManeuvers.Count > 0 && oldManeuvers[0].UT > Planetarium.GetUniversalTime())
             {
                 List<Maneuver> toRestore = SaveManeuvers();
 
-                while(Solver.maneuverNodes.Count > 0)
+                while (Solver.maneuverNodes.Count > 0)
                 {
                     Solver.maneuverNodes[0].RemoveSelf();
                 }
-                foreach(Maneuver m in toRestore)
+                foreach (Maneuver m in toRestore)
                 {
                     ManeuverNode node = Solver.AddManeuverNode(m.UT);
                     node.DeltaV = m.DeltaV;

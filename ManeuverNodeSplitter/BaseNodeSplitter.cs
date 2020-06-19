@@ -74,6 +74,9 @@ namespace ManeuverNodeSplitter
                     repeatLimit = "";
 
                 GUILayout.BeginHorizontal();
+                GUILayout.Label("Enter altitude to stop at");
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
                 GUILayout.Label("to", GUILayout.Width(30));
                 repeatLimit = GUILayout.TextField(repeatLimit, GUILayout.ExpandWidth(true));
                 GUILayout.Label("km", GUILayout.Width(30));

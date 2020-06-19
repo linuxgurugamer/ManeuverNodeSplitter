@@ -1,0 +1,9 @@
+Changelog
+
+1.8.0
+	Adoption by Linuxgurugamer
+	Replaced toolbar code with Toolbarcontroller
+	Added support for ClickThroughBlocker
+	Moved all configs from cfg file to Settings page
+	Made buttons visible in Flight scene as well as Map view
+	Added hiding of window when F2 is pressed

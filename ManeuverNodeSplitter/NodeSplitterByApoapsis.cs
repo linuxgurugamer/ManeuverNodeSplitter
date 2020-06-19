@@ -54,7 +54,7 @@ namespace ManeuverNodeSplitter
 
             double targetApo = value * 1000;
 
-            for(int iteration = 0; iteration < MNSSettings.Instance.splitByApoIterations; iteration += 1)
+            for(int iteration = 0; iteration < HighLogic.CurrentGame.Parameters.CustomParams<MNS>().splitByApoIterations; iteration += 1)
             {
                 fraction = (minFraction + maxFraction) / 2;
                 Vector3d dv = original.DeltaV * fraction;
