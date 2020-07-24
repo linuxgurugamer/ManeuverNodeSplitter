@@ -58,8 +58,8 @@ namespace ManeuverNodeSplitter
                     ApplicationLauncher.AppScenes.MAPVIEW | ApplicationLauncher.AppScenes.FLIGHT,
                     MODID,
                     "nodeSplitterButton",
-                    "NodeSplitter/PluginData/ejection38",
-                    "NodeSplitter/PluginData/ejection24",
+                    "ManeuverNodeSplitter/PluginData/ejection38",
+                    "ManeuverNodeSplitter/PluginData/ejection24",
                     MODNAME
                 );
             }
